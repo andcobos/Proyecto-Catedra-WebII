@@ -32,5 +32,4 @@ function Empresas() {
     </div>
   );
 }
-
 export default Empresas;

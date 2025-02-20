@@ -1,7 +1,7 @@
-import { createContext, useReducer, useEffect } from "react";
-import { collection, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
+import { createContext, useReducer, useEffect, useRef } from "react";
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig"; 
-import AdminReducer from "./adminReducer";
+import adminReducer from "./adminReducer";
 
 export const AdminContext = createContext();
 
@@ -14,31 +14,39 @@ const initialState = {
 
 export const AdminProvider = ({ children }) => {
   const [state, dispatch] = useReducer(adminReducer, initialState);
+  const isFetched = useRef(false);
 
-
+  // Datos de firebase
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const empresasSnap = await getDocs(collection(db, "empresas"));
-        const empresas = empresasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        dispatch({ type: "SET_EMPRESAS", payload: empresas });
+    if (!isFetched.current) { 
+      const fetchData = async () => {
+        try {
+          // Obtener empresas
+          const empresasSnap = await getDocs(collection(db, "empresas"));
+          const empresas = empresasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          dispatch({ type: "SET_EMPRESAS", payload: empresas });
 
-        const rubrosSnap = await getDocs(collection(db, "rubros"));
-        const rubros = rubrosSnap.docs.map(doc => doc.data().nombre);
-        dispatch({ type: "SET_RUBROS", payload: rubros });
+          // Obtener rubros
+          const rubrosSnap = await getDocs(collection(db, "rubros"));
+          const rubros = rubrosSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          dispatch({ type: "SET_RUBROS", payload: rubros });
 
-        const clientesSnap = await getDocs(collection(db, "clientes"));
-        const clientes = clientesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        dispatch({ type: "SET_CLIENTES", payload: clientes });
-      } catch (error) {
-        console.error("Error al obtener datos:", error);
-      }
-    };
+          // Obtener clientes
+          const clientesSnap = await getDocs(collection(db, "clientes"));
+          const clientes = clientesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          dispatch({ type: "SET_CLIENTES", payload: clientes });
 
-    fetchData();
+          isFetched.current = true; 
+        } catch (error) {
+          console.error("Error al obtener datos:", error);
+        }
+      };
+
+      fetchData();
+    }
   }, []);
 
-  // Anadir empresa
+  // Empresas
   const addEmpresa = async (empresa) => {
     try {
       const docRef = await addDoc(collection(db, "empresas"), empresa);
@@ -48,7 +56,6 @@ export const AdminProvider = ({ children }) => {
     }
   };
 
-  // Eliminar empresa
   const deleteEmpresa = async (id) => {
     try {
       await deleteDoc(doc(db, "empresas", id));
@@ -58,13 +65,44 @@ export const AdminProvider = ({ children }) => {
     }
   };
 
+  // Rubros
+  const addRubro = async (nombre) => {
+    try {
+      const docRef = await addDoc(collection(db, "rubros"), { nombre });
+      dispatch({ type: "ADD_RUBRO", payload: { id: docRef.id, nombre } });
+    } catch (error) {
+      console.error("Error al agregar rubro:", error);
+    }
+  };
+
+  const updateRubro = async (id, newName) => {
+    try {
+      await updateDoc(doc(db, "rubros", id), { nombre: newName });
+      dispatch({ type: "UPDATE_RUBRO", payload: { id, newName } });
+    } catch (error) {
+      console.error("Error al actualizar rubro:", error);
+    }
+  };
+
+  const deleteRubro = async (id) => {
+    try {
+      await deleteDoc(doc(db, "rubros", id));
+      dispatch({ type: "DELETE_RUBRO", payload: id });
+    } catch (error) {
+      console.error("Error al eliminar rubro:", error);
+    }
+  };
+
   return (
     <AdminContext.Provider value={{ 
       empresas: state.empresas, 
       rubros: state.rubros, 
       clientes: state.clientes,
       addEmpresa,
-      deleteEmpresa
+      deleteEmpresa,
+      addRubro,
+      updateRubro,
+      deleteRubro
     }}>
       {children}
     </AdminContext.Provider>

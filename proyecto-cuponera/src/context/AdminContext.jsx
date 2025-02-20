@@ -1,7 +1,7 @@
 import { createContext, useReducer, useEffect } from "react";
 import { collection, getDocs, addDoc, deleteDoc, doc } from "firebase/firestore";
 import { db } from "../firebaseConfig"; 
-import adminReducer from "./adminReducer";
+import AdminReducer from "./adminReducer";
 
 export const AdminContext = createContext();
 

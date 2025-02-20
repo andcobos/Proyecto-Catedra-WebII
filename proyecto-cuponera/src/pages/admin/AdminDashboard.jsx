@@ -1,7 +1,7 @@
 //Vista de Inicio o Dashboard del Admin
 
 import { useContext } from "react";
-import { AdminContext } from "../../context/adminContext";
+import { AdminContext } from "../../context/AdminContext";
 
 function AdminDashboard() {
   const { empresas, rubros, clientes } = useContext(AdminContext);

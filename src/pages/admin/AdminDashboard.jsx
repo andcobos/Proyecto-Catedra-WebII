@@ -1,10 +1,10 @@
 //Vista de Inicio o Dashboard del Admin
 
 import { useContext } from "react";
-import { AdminContext } from "../../context/AdminContext";
+import { AdminContext } from "../../context/AdminContext.jsx";
 
 function AdminDashboard() {
-  const { empresas, rubros, clientes } = useContext(AdminContext);
+  const { Empresas, Rubros, Clientes } = useContext(AdminContext);
 
   return (
     <div className="container mx-auto p-6">
@@ -17,8 +17,8 @@ function AdminDashboard() {
           </h2>
           <div className="p-6">
             <ul className="text-gray-600">
-              {empresas.length > 0 ? (
-                empresas.map((empresa) => (
+              {Empresas.length > 0 ? (
+                Empresas.map((empresa) => (
                   <li key={empresa.id} className="border-b py-2">
                     {empresa.nombre} ({empresa.codigo}) - {empresa.rubro}
                   </li>

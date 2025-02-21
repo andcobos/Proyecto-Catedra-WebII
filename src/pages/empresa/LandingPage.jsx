@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { useEmployees } from "../../../context/employeesContext";
-import { useOffers } from "../../../context/offersContext";
-import CreateEmployee from "./CreateEmployee";
-import CreateOffer from "./CreateOffer";
+
+import CreateEmployee from "./CreateEmployee.jsx";
+import CreateOffer from "./CreateOffer.jsx";
+import {useOffers} from "../../context/offersContext.jsx";
+import {useEmployees} from "../../context/employeesContext.jsx";
 
 const LandingPage = () => {
     const { addEmployee } = useEmployees();

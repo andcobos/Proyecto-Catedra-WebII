@@ -1,7 +1,7 @@
 // Vista de Empresas del Admin
 
 import { useContext } from "react";
-import { AdminContext } from "../../context/AdminContext";
+import { AdminContext } from "../../context/AdminContext.jsx";
 
 function Empresas() {
   const { empresas, deleteEmpresa } = useContext(AdminContext);

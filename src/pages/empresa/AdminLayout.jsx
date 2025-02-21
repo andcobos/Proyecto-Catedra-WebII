@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import CompanyAdminNavbar from "../../../components/CompanyAdminNavbar";
+import CompanyAdminNavbar from "../../components/CompanyAdminNavbar.jsx";
 
 
 const AdminLayout = () => {

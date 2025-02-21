@@ -36,10 +36,7 @@ const LandingPage = () => {
             {showEmployeeModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
                     <div className="bg-white p-6 rounded-md shadow-md w-96 relative">
-                        <button
-                            className="absolute top-2 right-2 text-gray-600"
-                            onClick={() => setShowEmployeeModal(false)}
-                        >✖</button>
+                        
                         <CreateEmployee
                             closeModal={() => setShowEmployeeModal(false)}
                             addEmployee={addEmployee}
@@ -52,10 +49,7 @@ const LandingPage = () => {
             {showOfferModal && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50">
                     <div className="bg-white p-6 rounded-md shadow-md w-96 relative">
-                        <button
-                            className="absolute top-2 right-2 text-gray-600"
-                            onClick={() => setShowOfferModal(false)}
-                        >✖</button>
+                        
                         <CreateOffer
                             closeModal={() => setShowOfferModal(false)}
                             addOffer={addOffer}

@@ -6,7 +6,7 @@ function AdminNavbar() {
       <div className="container mx-auto flex justify-between items-center">
         <h1 className="text-2xl font-bold">La Cuponera - Admin</h1>
         <div className="flex space-x-4">
-          <Link to="/public" className="px-4 py-2 rounded transition duration-300 hover:bg-blue-700">
+          <Link to="/" className="px-4 py-2 rounded transition duration-300 hover:bg-blue-700">
             Inicio
           </Link>
           <Link to="/admin/empresas" className="px-4 py-2 rounded transition duration-300 hover:bg-blue-700">

@@ -72,9 +72,11 @@ export const couponService = {
                 offerData: {
                     title: offerData.title,
                     price: offerData.price,
-                    // Include other relevant offer data
+                    description: offerData.description,
+                    expirationDate: offerData.expirationDate,
+                    codigo: offerData.codigo // if this exists in offers
                 },
-                status: 'active'
+                status: 'available' // or 'redeemed' or 'expired'
             };
 
             const docRef = await addDoc(purchaseCollection, purchaseData);

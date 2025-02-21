@@ -1,35 +1,40 @@
-// src/context/FirebaseContext.js
-import { createContext, useState, useEffect } from 'react';
-import { auth, db } from '../firebase/config';
+import React, { createContext, useState, useEffect } from 'react';
+import { auth } from '../firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import authService from '../services/authService';
 
 export const FirebaseContext = createContext();
 
-// eslint-disable-next-line react/prop-types
-export function FirebaseProvider({ children }) {
-    // Track authentication state
+export const FirebaseProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            setUser(user);
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+                try {
+                    const role = await authService.getUserRole(firebaseUser.uid);
+                    setUser({
+                        uid: firebaseUser.uid,
+                        email: firebaseUser.email,
+                        role: role
+                    });
+                } catch (error) {
+                    console.error("Error setting user role:", error);
+                    setUser(null);
+                }
+            } else {
+                setUser(null);
+            }
             setLoading(false);
         });
 
-        return unsubscribe;
+        return () => unsubscribe();
     }, []);
 
-    const value = {
-        user,
-        loading,
-        auth,
-        db
-    };
-
     return (
-        <FirebaseContext.Provider value={value}>
-            {!loading && children}
+        <FirebaseContext.Provider value={{ user, setUser, loading }}>
+            {children}
         </FirebaseContext.Provider>
     );
-}
+};

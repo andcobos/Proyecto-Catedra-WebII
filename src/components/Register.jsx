@@ -8,12 +8,15 @@ const Register = () => {
     const [formData, setFormData] = useState({
         email: '',
         password: '',
-        displayName: ''
+        displayName: '',
+        dui: '',
+        numeroTelefono: '',
+        direccion: '',
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
-    const { register } = useAuth();  // Get register function from useAuth
+    const { register } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,7 +24,6 @@ const Register = () => {
         setLoading(true);
 
         try {
-            // Use the register function from useAuth
             const { user, error: registerError } = await register(
                 formData.email,
                 formData.password
@@ -32,18 +34,19 @@ const Register = () => {
             }
 
             if (user) {
-                // Create the user document in Firestore
                 await setDoc(doc(db, 'users', user.uid), {
                     uid: user.uid,
                     email: formData.email,
                     displayName: formData.displayName,
-                    role: 'client', // Default role
+                    role: 'client',
+                    dui: formData.dui,
+                    numeroTelefono: formData.numeroTelefono,
+                    direccion: formData.direccion,
                     createdAt: new Date(),
                     lastLogin: new Date(),
                     isActive: true
                 });
 
-                // Redirect to dashboard or home page
                 navigate('/dashboard');
             }
         } catch (error) {
@@ -80,6 +83,44 @@ const Register = () => {
                         value={formData.displayName}
                         onChange={handleChange}
                         className="w-full px-3 py-2 border rounded-lg"
+                        required
+                    />
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">DUI</label>
+                    <input
+                        type="text"
+                        name="dui"
+                        value={formData.dui}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-lg"
+                        placeholder="00000000-0"
+                        required
+                    />
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Número de teléfono</label>
+                    <input
+                        type="tel"
+                        name="numeroTelefono"
+                        value={formData.numeroTelefono}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-lg"
+                        placeholder="1234-5678"
+                        required
+                    />
+                </div>
+
+                <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Dirección</label>
+                    <textarea
+                        name="direccion"
+                        value={formData.direccion}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border rounded-lg"
+                        rows="3"
                         required
                     />
                 </div>

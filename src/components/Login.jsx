@@ -1,98 +1,93 @@
-// src/components/auth/Login.jsx
-import { useState, useContext } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { FirebaseContext } from '../context/FirebaseContext';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {useAuth} from '../hooks/useAuth';
+import { FirebaseContext } from '../context/FirebaseContext';
+import authService from '../services/authService';
 
-function Login() {
-
+const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState(null);
+    const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-
-    const { login } = useAuth();
     const navigate = useNavigate();
+    const { setUser } = useContext(FirebaseContext);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const {error} = await login(email, password);
+        setLoading(true);
+        setError('');
 
-        if(!error) {
+        try {
+            const userData = await authService.login(email, password);
+            setUser(userData);
 
-            navigate('/');
-
-        } else {
-            setError(error);
+            // Navigate based on role
+            switch (userData.role) {
+                case 'admin':
+                    navigate('/admin');
+                    break;
+                case 'empresa':
+                    navigate('/empresa');
+                    break;
+                case 'employee':
+                    navigate('/empresa/canjear-cupones');
+                    break;
+                case 'client':
+                    navigate('/mis-cupones');
+                    break;
+                default:
+                    navigate('/');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            setError('Failed to login. Please check your credentials.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow">
-                <div>
-                    <h2 className="text-center text-3xl font-extrabold text-gray-900">
-                        Bienvenido
-                    </h2>
+        <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+            <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+
+            {error && (
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+                    {error}
+                </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+                <div className="mb-4">
+                    <label className="block text-gray-700 mb-2">Email</label>
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full p-2 border rounded"
+                        required
+                    />
                 </div>
 
-                <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+                <div className="mb-6">
+                    <label className="block text-gray-700 mb-2">Password</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full p-2 border rounded"
+                        required
+                    />
+                </div>
 
-                    {error && (
-                        <div className="p-3 text-sm text-red-600 bg-red-100 rounded">
-                            {error}
-                        </div>
-                    )}
-
-                    <div className="space-y-4">
-                        {/* Correo!!!! */}
-                        <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                Correo
-                            </label>
-                            <input
-                                id="email"
-                                type="email"
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-
-                        {/* Password input field */}
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                Contraseña
-                            </label>
-                            <input
-                                id="password"
-                                type="password"
-                                required
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Submit button */}
-                    <button
-                        type="submit"
-
-
-                        disabled={loading}
-                        className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 ${
-                            loading ? 'opacity-50 cursor-not-allowed' : ''
-                        }`}
-                    >
-                        {loading ? 'Cargando...' : 'Iniciar Sesion'}
-                    </button>
-                </form>
-            </div>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-purple-600 text-white py-2 px-4 rounded hover:bg-purple-700 disabled:opacity-50"
+                >
+                    {loading ? 'Logging in...' : 'Login'}
+                </button>
+            </form>
         </div>
     );
-}
+};
 
 export default Login;

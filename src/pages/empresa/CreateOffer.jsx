@@ -1,167 +1,217 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from 'react';
+import { FirebaseContext } from '../../context/FirebaseContext';
+import { offerService } from '../../services/offerService';
 
-const CreateOffer = ({ closeModal, addOffer }) => {
+const CreateOffer = ({ onClose }) => {
+    const { user } = useContext(FirebaseContext);
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
     const [offerData, setOfferData] = useState({
-        title: "",
-        regularPrice: 0,
-        offerPrice: 0,
-        startDate: "",
-        endDate: "",
-        expirationDate: "",
-        couponLimit: null,
-        description: "",
-        details: "",
-        image: null,
-        status: "En espera",
-        couponsSold: 0,
-        commissionPercentage: 10,
+        title: '',
+        regularPrice: '',
+        offerPrice: '',
+        startDate: '',
+        endDate: '',
+        couponsExpirationDate: '',
+        maxCoupons: '',
+        description: '',
+        otherDetails: ''
     });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-
-        setOfferData({
-            ...offerData,
-            [name]: name.includes("Price") || name === "couponLimit"
-                ? value === "" ? (name === "couponLimit" ? null : 0) : Number(value)
-                : value,
-        });
+        setOfferData(prev => ({
+            ...prev,
+            [name]: value
+        }));
     };
 
-    const handleFileChange = (e) => {
-        if (e.target.files.length > 0) {
-            setOfferData((prevState) => ({ ...prevState, image: e.target.files[0] }));
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        try {
+            if (!user?.uid) {
+                throw new Error('No se encontró ID de empresa');
+            }
+
+            // Validate dates
+            const startDate = new Date(offerData.startDate);
+            const endDate = new Date(offerData.endDate);
+            const expirationDate = new Date(offerData.couponsExpirationDate);
+
+            if (endDate <= startDate) {
+                throw new Error('La fecha de fin debe ser posterior a la fecha de inicio');
+            }
+
+            if (expirationDate <= endDate) {
+                throw new Error('La fecha de expiración de cupones debe ser posterior a la fecha de fin de la oferta');
+            }
+
+            await offerService.createOffer(user.uid, offerData);
+            alert('Oferta creada exitosamente y enviada para aprobación');
+            onClose();
+        } catch (error) {
+            console.error('Error creating offer:', error);
+            setError(error.message || 'Error al crear la oferta');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (!offerData.title || !offerData.offerPrice || !offerData.startDate || !offerData.endDate) return;
-
-        addOffer({ ...offerData, id: crypto.randomUUID() });
-
-        setOfferData({
-            title: "",
-            regularPrice: 0,
-            offerPrice: 0,
-            startDate: "",
-            endDate: "",
-            expirationDate: "",
-            couponLimit: null,
-            description: "",
-            details: "",
-            image: null,
-            status: "En espera",
-            couponsSold: 0,
-            commissionPercentage: 10,
-        });
-
-        closeModal();
-    };
-
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="bg-white p-6 rounded-md shadow-md w-full max-w-3xl">
-                <h2 className="text-xl font-bold mb-4 text-center">Crear Oferta</h2>
+        <div className="bg-white rounded-lg shadow-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">Crear Nueva Oferta</h2>
+                <button
+                    onClick={onClose}
+                    className="text-gray-500 hover:text-gray-700"
+                >
+                    ✕
+                </button>
+            </div>
 
-                <form className="space-y-4" onSubmit={handleSubmit}>
-                    <input
-                        type="text"
-                        name="title"
-                        placeholder="Título"
-                        className="w-full border p-2 rounded"
-                        value={offerData.title}
-                        onChange={handleChange}
-                        required
-                    />
+            {error && (
+                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">
+                    {error}
+                </div>
+            )}
 
-                    <div className="flex gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Título de la Oferta</label>
+                        <input
+                            type="text"
+                            name="title"
+                            value={offerData.title}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Precio Regular ($)</label>
                         <input
                             type="number"
                             name="regularPrice"
-                            placeholder="Precio regular"
-                            className="w-1/2 border p-2 rounded"
                             value={offerData.regularPrice}
                             onChange={handleChange}
+                            className="w-full p-2 border rounded"
                             required
+                            min="0"
+                            step="0.01"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Precio de Oferta ($)</label>
                         <input
                             type="number"
                             name="offerPrice"
-                            placeholder="Precio de la oferta"
-                            className="w-1/2 border p-2 rounded"
                             value={offerData.offerPrice}
                             onChange={handleChange}
+                            className="w-full p-2 border rounded"
                             required
+                            min="0"
+                            step="0.01"
                         />
                     </div>
 
-                    <div className="flex gap-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Cantidad Límite de Cupones</label>
                         <input
-                            type="date"
+                            type="number"
+                            name="maxCoupons"
+                            value={offerData.maxCoupons}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            min="1"
+                            placeholder="Opcional"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Fecha de Inicio</label>
+                        <input
+                            type="datetime-local"
                             name="startDate"
-                            className="w-1/3 border p-2 rounded"
                             value={offerData.startDate}
                             onChange={handleChange}
+                            className="w-full p-2 border rounded"
                             required
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Fecha de Fin</label>
                         <input
-                            type="date"
+                            type="datetime-local"
                             name="endDate"
-                            className="w-1/3 border p-2 rounded"
                             value={offerData.endDate}
                             onChange={handleChange}
+                            className="w-full p-2 border rounded"
                             required
                         />
-                        <input
-                            type="date"
-                            name="expirationDate"
-                            className="w-1/3 border p-2 rounded"
-                            value={offerData.expirationDate}
-                            onChange={handleChange}
-                        />
                     </div>
 
-                    <input
-                        type="number"
-                        name="couponLimit"
-                        placeholder="Cantidad límite de cupones (opcional)"
-                        className="w-full border p-2 rounded"
-                        value={offerData.couponLimit ?? ""}
-                        onChange={handleChange}
-                    />
+                    <div>
+                        <label className="block text-sm font-medium mb-1">Fecha de Expiración de Cupones</label>
+                        <input
+                            type="datetime-local"
+                            name="couponsExpirationDate"
+                            value={offerData.couponsExpirationDate}
+                            onChange={handleChange}
+                            className="w-full p-2 border rounded"
+                            required
+                        />
+                    </div>
+                </div>
 
+                <div>
+                    <label className="block text-sm font-medium mb-1">Descripción</label>
                     <textarea
                         name="description"
-                        placeholder="Descripción"
-                        rows="3"
-                        className="w-full border p-2 rounded"
                         value={offerData.description}
                         onChange={handleChange}
+                        className="w-full p-2 border rounded"
+                        rows="4"
                         required
                     ></textarea>
+                </div>
 
-                    <div className="border p-4 rounded-md flex flex-col items-center">
-                        <label className="text-gray-600 mb-2">Subir imagen</label>
-                        <input
-                            type="file"
-                            name="imageOffer"
-                            accept="image/*"
-                            className="w-full"
-                            onChange={handleFileChange}
-                        />
-                    </div>
+                <div>
+                    <label className="block text-sm font-medium mb-1">Otros Detalles</label>
+                    <textarea
+                        name="otherDetails"
+                        value={offerData.otherDetails}
+                        onChange={handleChange}
+                        className="w-full p-2 border rounded"
+                        rows="3"
+                        placeholder="Opcional"
+                    ></textarea>
+                </div>
 
-                    <div className="flex justify-between">
-                        <button type="button" className="bg-gray-400 text-white px-4 py-2 rounded" onClick={closeModal}>
-                            Cancelar
-                        </button>
-                        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-                            Crear Oferta
-                        </button>
-                    </div>
-                </form>
-            </div>
+                <div className="flex justify-end gap-4 pt-4">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-4 py-2 border rounded hover:bg-gray-100"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+                    >
+                        {loading ? 'Creando...' : 'Crear Oferta'}
+                    </button>
+                </div>
+            </form>
         </div>
     );
 };

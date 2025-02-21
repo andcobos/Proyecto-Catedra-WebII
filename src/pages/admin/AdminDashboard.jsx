@@ -1,36 +1,38 @@
-//Vista de Inicio o Dashboard del Admin
-
-import { useContext } from "react";
-import { AdminContext } from "../../context/AdminContext.jsx";
+// src/pages/admin/AdminDashboard.jsx
+import React, { useContext } from 'react';
+import { AdminContext } from '../../context/AdminContext';
 
 function AdminDashboard() {
-  const { Empresas, Rubros, Clientes } = useContext(AdminContext);
+  const { empresas, rubros, clientes } = useContext(AdminContext);
+
+  // Add loading state check
+  if (!empresas || !rubros || !clientes) {
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+    </div>;
+  }
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Panel de Administración</h1>
+      <div className="container mx-auto p-6">
+        <h1 className="text-3xl font-bold mb-6">Dashboard Administrativo</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white shadow-lg rounded-lg border border-gray-200">
-          <h2 className="bg-slate-700 text-white text-xl font-semibold p-4 rounded-t-lg">
-            Gestión de Empresas
-          </h2>
-          <div className="p-6">
-            <ul className="text-gray-600">
-              {Empresas.length > 0 ? (
-                Empresas.map((empresa) => (
-                  <li key={empresa.id} className="border-b py-2">
-                    {empresa.nombre} ({empresa.codigo}) - {empresa.rubro}
-                  </li>
-                ))
-              ) : (
-                <p>No hay empresas registradas</p>
-              )}
-            </ul>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-2">Empresas</h2>
+            <p className="text-3xl">{empresas.length}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-2">Rubros</h2>
+            <p className="text-3xl">{rubros.length}</p>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-xl font-semibold mb-2">Clientes</h2>
+            <p className="text-3xl">{clientes.length}</p>
           </div>
         </div>
       </div>
-    </div>
   );
 }
 

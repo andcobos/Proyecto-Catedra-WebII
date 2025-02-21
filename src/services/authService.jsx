@@ -1,22 +1,20 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 
-// Maneja todas las solicitudes de autenticación
 export const authService = {
-    // Registrar un nuevo usuario
-    registerUser: async (email, password, displayName) => {
+    // Register a new user
+    registerUser: async (email, password, userData) => {
         try {
-            // record de autenticación
+            // Create authentication record
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // crear el documento en la collection
-            await setDoc(doc(db, 'users', user.uid), {
+            // Create document in the clients collection (since registration is for clients)
+            await setDoc(doc(db, 'clients', user.uid), {
                 uid: user.uid,
                 email: user.email,
-                displayName: displayName,
-                role: 'client', // default para registro desde el login
+                ...userData,
                 createdAt: new Date(),
                 lastLogin: new Date(),
                 isActive: true
@@ -24,7 +22,6 @@ export const authService = {
 
             return user;
         } catch (error) {
-            // errores comunes
             switch (error.code) {
                 case 'auth/email-already-in-use':
                     throw new Error('Este correo electrónico ya está registrado');
@@ -38,12 +35,36 @@ export const authService = {
         }
     },
 
-    // Login usuario existente
-    loginUser: async (email, password) => {
+    // Login existing user
+    login: async (email, password) => {
         try {
+            console.log('Attempting login for:', email);
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            return userCredential.user;
+            const user = userCredential.user;
+            console.log('Firebase auth successful for user:', user.uid);
+
+            const role = await authService.getUserRole(user.uid);
+            console.log('Retrieved role:', role);
+
+            if (!role) {
+                throw new Error('No role found for user');
+            }
+
+            // Update last login
+            await setDoc(doc(db, 'users', user.uid), {
+                lastLogin: new Date()
+            }, { merge: true });
+
+            return {
+                uid: user.uid,
+                email: user.email,
+                role: role
+            };
         } catch (error) {
+            console.error('Login error:', error);
+            if (error.message === 'No role found for user') {
+                throw new Error('No role found for user');
+            }
             switch (error.code) {
                 case 'auth/user-not-found':
                     throw new Error('Usuario no encontrado');
@@ -53,5 +74,77 @@ export const authService = {
                     throw error;
             }
         }
+    },
+
+    // Get user role by checking all role-based collections
+    getUserRole: async (userId) => {
+        try {
+            console.log('Checking role for user:', userId);
+
+            // Check the users collection where the data actually is
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            console.log('Checked users collection:', userDoc.exists());
+
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                console.log('Found user data:', userData);
+                return userData.role; // This will return 'client', 'admin', etc.
+            }
+
+            console.log('No user document found');
+            return null;
+        } catch (error) {
+            console.error("Error verifying user role:", error);
+            throw error;
+        }
+    },
+
+    // Get user data based on their role
+    getUserData: async (userId, role) => {
+        try {
+            const collectionName = getRoleCollection(role);
+            if (!collectionName) return null;
+
+            const userDoc = await getDoc(doc(db, collectionName, userId));
+            return userDoc.exists() ? { id: userDoc.id, ...userDoc.data() } : null;
+        } catch (error) {
+            console.error("Error getting user data:", error);
+            throw error;
+        }
+    },
+
+    // Register a company employee (for company admin use)
+    registerEmployee: async (email, password, employeeData, companyId) => {
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            await setDoc(doc(db, 'employees', user.uid), {
+                uid: user.uid,
+                email: user.email,
+                companyId,
+                ...employeeData,
+                createdAt: new Date(),
+                lastLogin: new Date(),
+                isActive: true
+            });
+
+            return user;
+        } catch (error) {
+            throw error;
+        }
     }
 };
+
+// Helper function to get collection name based on role
+function getRoleCollection(role) {
+    const collections = {
+        'admin': 'admins',
+        'empresa': 'company_admins',
+        'employee': 'employees',
+        'client': 'clients'
+    };
+    return collections[role] || null;
+}
+
+export default authService;

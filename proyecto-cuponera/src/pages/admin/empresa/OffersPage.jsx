@@ -6,7 +6,7 @@ const OffersPage = () => {
   const { offers = [] } = useOffers(); 
   const [filter, setFilter] = useState("En espera");
 
-  // Filtra solo una vez en cada renderizado
+
   const filteredOffers = offers.filter((offer) => offer.status === filter);
 
   return (

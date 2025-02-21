@@ -5,7 +5,10 @@ const CompanyAdminNavbar = () => {
         <nav className="bg-blue-500 p-4 text-white flex justify-between items-center">
             <Logo />
             <NavLinks />
-            <ProfileIcon />
+            <div className="flex items-center space-x-4">
+                <ProfileIcon />
+                <LogoutButton />
+            </div>
         </nav>
     );
 };
@@ -34,6 +37,14 @@ export function ProfileIcon() {
         <div className="rounded-full bg-white text-blue-500 p-2 cursor-pointer">
             <span role="img" aria-label="user">👤</span>
         </div>
+    );
+}
+
+export function LogoutButton() {
+    return (
+        <button className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+            Logout
+        </button>
     );
 }
 

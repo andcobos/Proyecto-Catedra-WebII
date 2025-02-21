@@ -93,6 +93,34 @@ export const AdminProvider = ({ children }) => {
     }
   };
 
+  // Clientes
+  const addCliente = async (cliente) => {
+    try {
+      const docRef = await addDoc(collection(db, "clientes"), cliente);
+      dispatch({ type: "ADD_CLIENTE", payload: { id: docRef.id, ...cliente } });
+    } catch (error) {
+      console.error("Error al agregar cliente:", error);
+    }
+  };
+
+  const updateCliente = async (id, clienteActualizado) => {
+    try {
+      await updateDoc(doc(db, "clientes", id), clienteActualizado);
+      dispatch({ type: "UPDATE_CLIENTE", payload: { id, clienteActualizado } });
+    } catch (error) {
+      console.error("Error al actualizar cliente:", error);
+    }
+  };
+
+  const deleteCliente = async (id) => {
+    try {
+      await deleteDoc(doc(db, "clientes", id));
+      dispatch({ type: "DELETE_CLIENTE", payload: id });
+    } catch (error) {
+      console.error("Error al eliminar cliente:", error);
+    }
+  };
+
   return (
     <AdminContext.Provider value={{ 
       empresas: state.empresas, 
@@ -102,7 +130,10 @@ export const AdminProvider = ({ children }) => {
       deleteEmpresa,
       addRubro,
       updateRubro,
-      deleteRubro
+      deleteRubro,
+      addCliente, 
+      updateCliente, 
+      deleteCliente 
     }}>
       {children}
     </AdminContext.Provider>
